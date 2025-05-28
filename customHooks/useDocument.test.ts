@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { useDocumentContent } from '../useDocument';
+import { getDocuments } from '@/actions/getDocuments';
+import { useQuery } from '@tanstack/react-query';
 
 // Mock the dependencies
 jest.mock('@/actions/getDocuments', () => ({
@@ -12,9 +14,6 @@ jest.mock('@tanstack/react-query', () => ({
 
 describe('useDocumentContent', () => {
   it('calls useQuery with the correct query key and query function', () => {
-    const { getDocuments } = require('@/actions/getDocuments');
-    const { useQuery } = require('@tanstack/react-query');
-
     // Optionally, set a mock return value
     useQuery.mockReturnValue({ data: 'mockData' });
 
