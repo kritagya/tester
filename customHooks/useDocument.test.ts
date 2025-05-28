@@ -1,30 +1,35 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, RenderHookResult } from '@testing-library/react';
 import { useDocumentContent } from '../useDocument';
 import { getDocuments } from '@/actions/getDocuments';
 import { useQuery } from '@tanstack/react-query';
+
+interface MockData {
+  data: string;
+}
 
 // Mock the dependencies
 jest.mock('@/actions/getDocuments', () => ({
   getDocuments: jest.fn(),
 }));
 
+const mockUseQuery = jest.fn() as jest.MockedFunction<typeof useQuery>;
 jest.mock('@tanstack/react-query', () => ({
-  useQuery: jest.fn(),
+  useQuery: () => mockUseQuery(),
 }));
 
 describe('useDocumentContent', () => {
   it('calls useQuery with the correct query key and query function', () => {
-    // Optionally, set a mock return value
-    useQuery.mockReturnValue({ data: 'mockData' });
+    const mockData: MockData = { data: 'mockData' };
+    (mockUseQuery as jest.Mock).mockReturnValue(mockData);
 
-    const endPoint = 'test-endpoint';
-    const { result } = renderHook(() => useDocumentContent(endPoint));
+    const endPoint: string = 'test-endpoint';
+    const { result }: RenderHookResult<MockData> = renderHook(() => useDocumentContent(endPoint));
 
-    expect(useQuery).toHaveBeenCalledWith({
+    expect(mockUseQuery).toHaveBeenCalledWith({
       queryKey: ['document-content', endPoint],
       queryFn: expect.any(Function),
       enabled: false,
     });
-    expect(result.current).toEqual({ data: 'mockData' });
+    expect(result.current).toEqual(mockData);
   });
-}); 
+});
