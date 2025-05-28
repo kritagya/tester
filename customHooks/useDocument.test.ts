@@ -14,7 +14,7 @@ jest.mock('@/actions/getDocuments', () => ({
 
 const mockUseQuery = jest.fn() as jest.MockedFunction<typeof useQuery>;
 jest.mock('@tanstack/react-query', () => ({
-  useQuery: () => mockUseQuery(),
+  useQuery: (options: any) => mockUseQuery(options),
 }));
 
 describe('useDocumentContent', () => {
@@ -23,7 +23,7 @@ describe('useDocumentContent', () => {
     (mockUseQuery as jest.Mock).mockReturnValue(mockData);
 
     const endPoint: string = 'test-endpoint';
-    const { result }: RenderHookResult<MockData> = renderHook(() => useDocumentContent(endPoint));
+    const { result }: RenderHookResult<MockData, string> = renderHook(() => useDocumentContent(endPoint));
 
     expect(mockUseQuery).toHaveBeenCalledWith({
       queryKey: ['document-content', endPoint],
@@ -32,4 +32,4 @@ describe('useDocumentContent', () => {
     });
     expect(result.current).toEqual(mockData);
   });
-});
+}); 
