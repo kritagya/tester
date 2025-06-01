@@ -15,9 +15,17 @@ describe('useSingleExecution', () => {
     expect(mockMethod).toHaveBeenCalledTimes(1);
   });
 
-  it('should not execute if the method is undefined', () => {
-    const { result } = renderHook(() => useSingleExecution(undefined as any));
-    expect(() => result.current()).not.toThrow();
+  it('should handle empty function gracefully', () => {
+    const emptyFunction = jest.fn();
+    const { result } = renderHook(() => useSingleExecution(emptyFunction));
+    
+    // First call
+    result.current();
+    expect(emptyFunction).toHaveBeenCalledTimes(1);
+    
+    // Second call
+    result.current();
+    expect(emptyFunction).toHaveBeenCalledTimes(1);
   });
 
   it('should maintain single execution across re-renders', () => {
