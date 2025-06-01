@@ -1,0 +1,38 @@
+import { renderHook } from '@testing-library/react-hooks';
+import { useSingleExecution } from './useSingleExecution';
+
+describe('useSingleExecution', () => {
+  it('should execute the method only once', () => {
+    const mockMethod = jest.fn();
+    const { result } = renderHook(() => useSingleExecution(mockMethod));
+
+    // First call
+    result.current();
+    expect(mockMethod).toHaveBeenCalledTimes(1);
+
+    // Second call
+    result.current();
+    expect(mockMethod).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not execute if the method is undefined', () => {
+    const { result } = renderHook(() => useSingleExecution(undefined as any));
+    expect(() => result.current()).not.toThrow();
+  });
+
+  it('should maintain single execution across re-renders', () => {
+    const mockMethod = jest.fn();
+    const { result, rerender } = renderHook(() => useSingleExecution(mockMethod));
+
+    // First call
+    result.current();
+    expect(mockMethod).toHaveBeenCalledTimes(1);
+
+    // Re-render
+    rerender();
+
+    // Second call after re-render
+    result.current();
+    expect(mockMethod).toHaveBeenCalledTimes(1);
+  });
+}); 
