@@ -1,0 +1,30 @@
+import { useEffect } from 'react';
+
+
+
+/**
+ * Custom hook to scroll to top when dependencies change
+ * 
+ * @param dependencies - Array of dependencies to watch for changes
+ * @param behavior - Scroll behavior: 'auto' | 'smooth' (default: 'auto')
+ * @param timeout - Timeout in milliseconds before scrolling (default: 100)
+ */
+export const useScrollToTopOnChange = (
+  dependencies: any[],
+  behavior: ScrollBehavior = 'auto',
+  timeout: number = 100
+) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const timer = setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior
+        });
+      }, timeout);
+
+      return () => clearTimeout(timer);
+    }
+  }, dependencies);
+}; 
