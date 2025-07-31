@@ -1,30 +1,63 @@
-import { useEffect } from 'react';
-
-
-
 /**
- * Custom hook to scroll to top when dependencies change
+ * Simple function to scroll to top of the page
+ * Works in both client and server environments
+ * Includes multiple fallback methods for better compatibility
  * 
- * @param dependencies - Array of dependencies to watch for changes
  * @param behavior - Scroll behavior: 'auto' | 'smooth' (default: 'auto')
  * @param timeout - Timeout in milliseconds before scrolling (default: 100)
  */
-export const useScrollToTopOnChange = (
-  dependencies: any[],
+export const scrollToTop = (
   behavior: ScrollBehavior = 'auto',
   timeout: number = 100
 ) => {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const timer = setTimeout(() => {
+  if (typeof window !== 'undefined') {
+    setTimeout(() => {
+      // Method 1: window.scrollTo with options
+      try {
         window.scrollTo({
           top: 0,
           left: 0,
           behavior
         });
-      }, timeout);
+        return;
+      } catch (error) {
+        console.warn('window.scrollTo with options failed:', error);
+      }
 
-      return () => clearTimeout(timer);
-    }
-  }, dependencies);
+      // Method 2: window.scrollTo with coordinates
+      try {
+        window.scrollTo(0, 0);
+        return;
+      } catch (error) {
+        console.warn('window.scrollTo with coordinates failed:', error);
+      }
+
+      // Method 3: document.documentElement.scrollTop
+      try {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0; // For Safari
+        return;
+      } catch (error) {
+        console.warn('document.documentElement.scrollTop failed:', error);
+      }
+
+      // Method 4: window.scroll
+      try {
+        window.scroll(0, 0);
+        return;
+      } catch (error) {
+        console.warn('window.scroll failed:', error);
+      }
+
+      // Method 5: document.body.scrollIntoView
+      try {
+        document.body.scrollIntoView({ behavior });
+        return;
+      } catch (error) {
+        console.warn('document.body.scrollIntoView failed:', error);
+      }
+
+      console.error('All scroll methods failed');
+    }, timeout);
+  }
 }; 
