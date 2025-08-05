@@ -1,0 +1,108 @@
+      const handleSymptomSelect = async (element, from) => {
+        const val = (from == "handleTypeAheadSelect" ? element.target.value : element)
+        const words = val.split("~");
+        const symptomId = words[0];
+        const issueName = words[1];
+        const isFwaIntentPage = words[3];
+        const isFwa = words[2] == "true";
+        isFwaFlow = isFwa;
+        selectedSymptomId = symptomId;
+        const featureFlag = true 
+
+        if(featureFlag){
+           const insightObj = {
+            humanMessage: issueName,
+            mtn: "1234567890"
+           }
+           sessionStorage.setItem('insightObj', JSON.stringify(insightObj))
+           customHistory.push("/test")
+           return
+        } 
+        return
+
+
+        if (window?.troubleShootingJson?.ddata?.device?.is5GDevice) {
+            window.troubleShootingJson.ddata.device.is5GDevice = isFwa;
+        }
+
+        const troubleshootingDevice = {
+            ...configDetails?.config?.troubleShootingJson?.ddata?.device,
+            changeDevice: false,
+            is5GDevice: isFwa,
+            isFwa,
+        };
+        sessionStorage.setItem(
+            "troubleshootingDevice",
+            JSON.stringify(troubleshootingDevice)
+        );
+
+        const config = {
+            ...configDetails?.config,
+            troubleShootingJson: {
+                ...configDetails?.config?.troubleShootingJson,
+                ddata: {
+                    ...configDetails?.config?.troubleShootingJson?.ddata,
+                    device: troubleshootingDevice,
+                },
+            },
+        };
+        sessionStorage.setItem("mvoConfig", JSON.stringify(config));
+
+        const troubleshootingDetails = {
+            accountNumber: configDetails?.config?.caseDetails?.accountNumber,
+            caseId: props.allIntentsData?.caseId,
+            changeIssueUrl: "",
+            channel,
+            custVerified: "N",
+            deviceSku:
+                configDetails?.config?.troubleShootingJson?.ddata?.device?.deviceSku,
+            equipmentId:
+                configDetails?.config?.troubleShootingJson?.ddata?.device?.equipmentId,
+            intent: issueName,
+            intentId: symptomId,
+            islogin: !window.isLoggedOut,
+            mtn: props.allIntentsData?.selectedMdn,
+            mtnId:
+                window.caseDetails.mtnId || configDetails?.config?.caseDetails?.mtnId,
+            tier: 1,
+            tierId: 1,
+            userId: "",
+            isFwaIntentPage: isFwaIntentPage ? isFwaIntentPage : false,
+        };
+        sessionStorage.setItem(
+            "troubleshootingDetails",
+            JSON.stringify(troubleshootingDetails)
+        );
+
+        if (window?.hlthFlow) {
+            sessionStorage.setItem('deviceHealthData', JSON.stringify({
+                ...JSON.parse(sessionStorage.getItem('deviceHealthData')),
+                intent: issueName,
+                intentId: symptomId,
+                processStep: "resume",
+                backButtonTrigger: true, // Flag to handle getNsaCall on BackButton Scenario
+                isManualSelection: true, // Flag to idendity popState event due to CTA click
+            }));
+        }
+
+        if (!window.caseDetails) {
+            window.caseDetails = {};
+        }
+        window.caseDetails.intent = issueName;
+        window.caseDetails.intentId = symptomId;
+
+        sessionStorage.setItem("nBSFlow", false);
+        if (props.allIntentsData.nbxIntentIds) {
+            const nbxIntentIdsArr = props.allIntentsData.nbxIntentIds.split(",");
+            if (Array.isArray(nbxIntentIdsArr)) {
+                const nBSFlow = nbxIntentIdsArr.includes(symptomId);
+                sessionStorage.setItem("nBSFlow", Boolean(nBSFlow));
+            }
+        }
+
+        if (functions.handleSymptomSelect) {
+            functions.handleSymptomSelect(symptomId, issueName);
+        }
+
+
+    };
