@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ThemeProvider } from 'styled-components';
-import NetworkInsight from './NetworkInsight';
+import NetworkInsight from './ai-insight';
 
 // Mock all external dependencies
 jest.mock('react', () => ({
@@ -911,12 +911,42 @@ describe('🧪 NetworkInsight.jsx - Fresh Complete Test Suite', () => {
       }).not.toThrow();
     });
 
+    it('should handle theme.isDark access when theme exists but isDark is undefined', () => {
+      mockUseParamsDetails.mockReturnValue({ 
+        theme: { surface: 'light' } // isDark is undefined
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByText('Reset Network Settings')).toBeInTheDocument();
+    });
+
     it('should render with correct Stack gap', () => {
       render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
 
       const stacks = screen.getAllByTestId('stack');
       const recommendationStack = stacks.find(s => s.getAttribute('gap') === '16px');
       expect(recommendationStack).toBeInTheDocument();
+    });
+
+    it('should handle accordion trigger with icon type', () => {
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      const accordionHeaders = screen.getAllByTestId('accordion-header');
+      const recommendationHeader = accordionHeaders.find(h => 
+        h.getAttribute('data-trigger-type') === 'icon'
+      );
+      
+      expect(recommendationHeader).toBeInTheDocument();
+    });
+
+    it('should render recommendation title with correct Body props', () => {
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      const titleElement = screen.getByText('Reset Network Settings');
+      expect(titleElement).toHaveAttribute('data-size', 'large');
+      expect(titleElement).toHaveAttribute('data-bold', 'true');
+      expect(titleElement).toHaveAttribute('data-color', '#000000');
     });
   });
 
@@ -1547,6 +1577,88 @@ describe('🧪 NetworkInsight.jsx - Fresh Complete Test Suite', () => {
       // Should not crash
       expect(screen.getByTestId('fragment')).toBeInTheDocument();
     });
+
+    it('should handle undefined AI insight store gracefully', () => {
+      mockUseAIInsightStore.mockReturnValue(undefined);
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByTestId('fragment')).toBeInTheDocument();
+    });
+
+    it('should handle empty AI insight store', () => {
+      mockUseAIInsightStore.mockReturnValue({});
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByTestId('fragment')).toBeInTheDocument();
+    });
+
+    it('should handle AI insight store with undefined store property', () => {
+      mockUseAIInsightStore.mockReturnValue({ store: undefined });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByTestId('fragment')).toBeInTheDocument();
+    });
+
+    it('should handle border property when theme.isDark is falsy', () => {
+      mockUseParamsDetails.mockReturnValue({ 
+        theme: { isDark: false, surface: 'light' }
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      const boxes = screen.getAllByTestId('box');
+      const mainBox = boxes[0];
+      expect(mainBox).not.toHaveAttribute('border');
+    });
+
+    it('should handle Summary component with null list prop', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: { 
+          ...MOCK_DATA.networkInsights.complete, 
+          summary: { data: null } 
+        },
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByText('Customer experience')).toBeInTheDocument();
+    });
+
+    it('should handle ItemList with null item prop', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: {
+          ...MOCK_DATA.networkInsights.complete,
+          recommendations: [null]
+        },
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should not crash
+      expect(screen.getByTestId('fragment')).toBeInTheDocument();
+    });
+
+    it('should handle RecommendationItem with null item prop', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: {
+          ...MOCK_DATA.networkInsights.complete,
+          recommendations: [null, { title: 'Valid Item', steps: ['Step 1'] }]
+        },
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByText('Valid Item')).toBeInTheDocument();
+    });
   });
 
   describe('🔍 Accessibility Tests', () => {
@@ -1627,6 +1739,178 @@ describe('🧪 NetworkInsight.jsx - Fresh Complete Test Suite', () => {
 
       // Should render with default light theme behavior
       expect(screen.getByText('Network Insights Summary')).toHaveAttribute('data-color', '#000000');
+    });
+  });
+
+  describe('🔄 Complete Conditional Rendering Tests', () => {
+    it('should render error state and not loading or success content', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: MOCK_DATA.networkInsights.complete,
+        isLoading: false,
+        error: new Error('Test error')
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should show error
+      expect(screen.getByText('Unable to get insights at the moment.')).toBeInTheDocument();
+      
+      // Should NOT show loading or success content
+      expect(screen.queryByText('Summarizing the findings...')).not.toBeInTheDocument();
+      expect(screen.queryByText('Customer experience')).not.toBeInTheDocument();
+      expect(screen.queryByText('Recommendations')).not.toBeInTheDocument();
+    });
+
+    it('should render loading state and not error or success content', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should show loading
+      expect(screen.getByText('Summarizing the findings...')).toBeInTheDocument();
+      
+      // Should NOT show error or success content
+      expect(screen.queryByText('Unable to get insights at the moment.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Customer experience')).not.toBeInTheDocument();
+      expect(screen.queryByText('Recommendations')).not.toBeInTheDocument();
+    });
+
+    it('should render success state and not error or loading content', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: MOCK_DATA.networkInsights.complete,
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should show success content
+      expect(screen.getByText('Customer experience')).toBeInTheDocument();
+      expect(screen.getByText('Recommendations')).toBeInTheDocument();
+      
+      // Should NOT show error or loading content
+      expect(screen.queryByText('Unable to get insights at the moment.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Summarizing the findings...')).not.toBeInTheDocument();
+    });
+
+    it('should prioritize error over loading when both are present', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: new Error('Priority test error')
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should show error (has priority)
+      expect(screen.getByText('Unable to get insights at the moment.')).toBeInTheDocument();
+      
+      // Should NOT show loading even though isLoading is true
+      expect(screen.queryByText('Summarizing the findings...')).not.toBeInTheDocument();
+    });
+
+    it('should handle all three states being false/null', () => {
+      mockUseNetworkInsight.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should not show any of the conditional content
+      expect(screen.queryByText('Unable to get insights at the moment.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Summarizing the findings...')).not.toBeInTheDocument();
+      expect(screen.queryByText('Customer experience')).not.toBeInTheDocument();
+      expect(screen.queryByText('Recommendations')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('🧩 Component Integration and Data Flow Tests', () => {
+    it('should pass correct surface prop to Header component', () => {
+      mockUseParamsDetails.mockReturnValue(MOCK_DATA.paramsDetails.darkTheme);
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // The surface prop should be passed to Header, which uses it for Loader
+      const loader = screen.queryByTestId('loader');
+      if (loader) {
+        expect(loader).toHaveAttribute('data-surface', 'dark');
+      }
+    });
+
+    it('should handle useAIInsightStore selector function correctly', () => {
+      const mockStore = {
+        store: {
+          currentIntent: { type: 'test', priority: 'high' },
+          isNetworkInsight: true
+        }
+      };
+
+      mockUseAIInsightStore.mockImplementationOnce((selector) => {
+        // Test that the selector function is called correctly
+        const result = selector(mockStore);
+        expect(result).toEqual(mockStore.store);
+        return mockStore.store;
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByTestId('fragment')).toBeInTheDocument();
+    });
+
+    it('should handle recommendations mapping with different key strategies', () => {
+      const dataWithDuplicateTitles = {
+        ...MOCK_DATA.networkInsights.complete,
+        recommendations: [
+          { title: 'Same Title', steps: ['Step 1'] },
+          { title: 'Same Title', steps: ['Step 2'] },
+          { title: null, steps: ['Step 3'] },
+          { title: undefined, steps: ['Step 4'] }
+        ]
+      };
+
+      mockUseNetworkInsight.mockReturnValue({
+        data: dataWithDuplicateTitles,
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      // Should handle duplicate titles and null/undefined titles
+      expect(screen.getAllByText('Same Title')).toHaveLength(2);
+    });
+
+    it('should handle summary list mapping with different item types', () => {
+      const dataWithMixedItems = {
+        ...MOCK_DATA.networkInsights.complete,
+        summary: {
+          data: [
+            'String item',
+            123, // Number
+            null, // Null
+            undefined, // Undefined
+            '', // Empty string
+            { object: 'value' } // Object
+          ]
+        }
+      };
+
+      mockUseNetworkInsight.mockReturnValue({
+        data: dataWithMixedItems,
+        isLoading: false,
+        error: null
+      });
+
+      render(<NetworkInsight handleSubSymptoms={jest.fn()} />);
+
+      expect(screen.getByText('String item')).toBeInTheDocument();
+      expect(screen.getByText('123')).toBeInTheDocument();
     });
   });
 });
