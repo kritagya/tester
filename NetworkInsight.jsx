@@ -1,10 +1,9 @@
-import React from 'react';
+import React,{Fragment} from 'react';
 import { Body } from '@vds/typography';
 import { Box, HStack, Stack } from '../../ResponsiveLayout';
 import IdeasSolutions from '@vds/icons/ideas-solutions';
 import Feedback from '../Feedback';
-import { useNetworkInsight } from './ai-insight-hooks';
-import { Skeleton } from '../../Skeleton';
+import { useNetworkInsight } from './ai-insight-hooks'
 import {
   Accordion,
   AccordionHeader,
@@ -20,6 +19,7 @@ import { useParamsDetails } from '../helpers/useParamDetails';
 import { Button, TextLink } from '@vds/buttons';
 import { useAIInsightStore } from './ai-insight-store';
 import styled from 'styled-components';
+import { Loader } from '@vds/loaders'
 
 
 const backgroundColor = '#E3F2FD';
@@ -47,27 +47,43 @@ const NetworkInsightFeedback = ({ ...props }) => {
   );
 };
 
-const LoadingSkeleton = () => (
-  <Stack gap="24px" width="100%" marginTop="12px">
-    <Stack>
-      <Stack gap="8px" width="100%">
-        <Skeleton width="95%" height="1.2rem" />
-        <Skeleton width="98%" height="1.2rem" />
-        <Skeleton width="90%" height="1.2rem" />
-      </Stack>
-    </Stack>
-  </Stack>
-);
+const AiLoader = styled.div`
+  margin-top: 7px;
+  margin-left: 20px;
+  min-width: 24px;
+  position: relative;
+  z-index: 1;
+  & div {
+    background-color: unset;
+    & div {
+      width: 24px;
+      height: 24px;
+    }
+  }
+`
 
-const Header = ({ isDark, isNetworkInsight }) => {
+const LoadingSkeleton = ({ isDark }) => (
+  <Stack gap="24px" width="100%" marginTop="12px">
+    <Body size="large" color={isDark ? '#FFFFFF' : '#000000'}>
+      Summarizing the findings...
+    </Body>
+  </Stack>
+)
+
+const Header = ({ isDark, isNetworkInsight, surface, isLoading }) => {
   return (
-    <HStack justifyContent="space-between" alignItems="center" width="100%">
+    <HStack alignItems="center" width="100%">
       <Body size="large" bold color={isDark ? '#FFFFFF' : '#000000'}>
         {isNetworkInsight ? 'Network' : 'Device'} Insights Summary
       </Body>
+      {isLoading && (
+        <AiLoader>
+          <Loader fullscreen={false} active={true} surface={surface} />
+        </AiLoader>
+      )}
     </HStack>
-  );
-};
+  )
+}
 
 const Summary = ({ list = [] }) => {
   const { theme } = useParamsDetails();
@@ -77,15 +93,18 @@ const Summary = ({ list = [] }) => {
       <Body size="large" bold color={theme?.isDark ? '#FFFFFF' : '#000000'}>
         Customer experience
       </Body>
+      <ul>
       {list?.map((item, index) => (
-        <Body
-          key={index}
+        <li key={index}>
+        <Body       
           size="large"
           color={theme?.isDark ? '#FFFFFF' : '#000000'}
         >
           {item}
         </Body>
+        </li>
       ))}
+      </ul>
     </Stack>
   );
 };
@@ -120,6 +139,7 @@ const LinkToArticle = ({ label, url }) => {
         href={url}
         style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
         surface={theme?.surface}
+        target="_blank"
       >
         {label}
       </TextLink>
@@ -139,7 +159,7 @@ const RecommendationItem = ({ item }) => {
       >
         <AccordionItem>
           <AccordionHeader trigger={{ type: 'icon' }}>
-            <AccordionTitle>{item?.title}</AccordionTitle>
+            <Body size="large" bold color={theme?.isDark ? '#FFFFFF' : '#000000'}>{item?.title}</Body>
           </AccordionHeader>
           <AccordionDetail>
             <Stack gap="16px">
@@ -157,15 +177,19 @@ const RecommendationItem = ({ item }) => {
     </StyledRecommendationAccordion>
   );
 };
+
 const Recommendations = ({ recommendations }) => {
   const { theme } = useParamsDetails();
+
+  if (!recommendations || recommendations?.length === 0) return null;
+
   return (
     <Stack gap="10px" width="70%">
       <Body bold size="large" color={theme?.isDark ? '#FFFFFF' : '#000000'}>
         Recommendations
       </Body>
 
-      <Box marginLeft="16px">
+      <Box>
         {recommendations?.map(item => (
           <RecommendationItem key={item?.title} item={item} />
         ))}
@@ -177,7 +201,7 @@ const Recommendations = ({ recommendations }) => {
 const IconContainer = () => {
   const { theme } = useParamsDetails();
   return (
-    <Box marginTop="32px">
+    <Box marginTop="15px">
       <IdeasSolutions iconsOnly surface={theme?.surface} />
     </Box>
   );
@@ -190,14 +214,13 @@ const FeedbackContainer = ({ isDisabled }) => {
       top="0"
       right="0"
       marginRight="50px"
-      marginTop="25px"
+      marginTop="10px"
       zIndex={1}
     >
       <NetworkInsightFeedback iconsOnly silent isDisabled={isDisabled} />
     </Box>
   );
 };
-
 const ErrorMessage = () => {
   const { theme } = useParamsDetails();
 
@@ -208,7 +231,7 @@ const ErrorMessage = () => {
   );
 };
 
-const Continue = ({ handleSubSymptoms }) => {
+const Continue = ({ handleSubSymptoms, isDark }) => {
   const currentIntent = useAIInsightStore(state => state.store.currentIntent);
   const newAiIntent = { ...currentIntent, fromAiContinue: true };
   console.log({ newAiIntent });
@@ -218,7 +241,7 @@ const Continue = ({ handleSubSymptoms }) => {
 
   return (
     <ContinueWrapper>
-      <Button size="small"  use="secondary" onClick={handleContinue}>
+      <Button size="small" surface={isDark?"dark":"light"}  use="primary" onClick={handleContinue}>
         Continue Troubleshooting
       </Button>
     </ContinueWrapper>
@@ -234,58 +257,55 @@ const NetworkInsight = ({ handleSubSymptoms }) => {
   // if (error) return null;
 
   return (
-    <>
-    <Box
-      aria-label="Gen AI network insight"
-      gap="16px"
-      backgroundColor={theme?.isDark ? '#000' : backgroundColor}
-      borderRadius="4px"
-      paddingInline="16px"
-      width="100%"
-      position="relative"
-    >
-      <StyledNetworkInsightContainer>
-        <HStack gap="16px" id="network-insight">
-          <IconContainer />
-          <FeedbackContainer
-            key={aiInsightStore?.intentId}
-            isDisabled={isLoading}
-          />
-          <Stack marginTop="25px" width="100%">
-            <Accordion
-              topLine={false}
-              bottomLine={false}
-              surface={theme?.isDark ? 'dark' : 'light'}
-            >
-              <AccordionItem type="single" alwaysOpen={isLoading} opened>
-                <AccordionHeader trigger={{ type: 'icon' }}>
-                  <Header
-                    isDark={theme?.isDark}
-                    isNetworkInsight={aiInsightStore?.isNetworkInsight}
-                  />
-                </AccordionHeader>
-                <AccordionDetail>
-                  {error && <ErrorMessage />}
-                  {!error && isLoading && <LoadingSkeleton />}
-                  {!error && !isLoading && (
-                    <Stack flexGrow={1} marginTop="-14px" gap="16px">
-                      <Summary list={networkInsight?.summary?.data} />
-                      <Recommendations
-                        recommendations={networkInsight?.recommendations}
-                      />
-                    </Stack>
-                  )}
-                </AccordionDetail>
-              </AccordionItem>
-            </Accordion>
-          </Stack>
-        </HStack>
-        
-      </StyledNetworkInsightContainer>
-      <Continue handleSubSymptoms={handleSubSymptoms} />
-    </Box> 
-    
-    </>
+    <Fragment>
+      <Box
+        aria-label="Gen AI network insight"
+        gap="16px"
+        backgroundColor={theme?.isDark ? '#000' : backgroundColor}
+        borderRadius="4px"
+        paddingInline="16px"
+        width="100%"
+        position="relative"
+        border={theme?.isDark && '1px solid white'}
+      >
+        <StyledNetworkInsightContainer>
+          <HStack gap="16px" id="network-insight">
+            <IconContainer />
+              <FeedbackContainer
+                key={aiInsightStore?.intentId}
+                isDisabled={isLoading}
+              />
+              <Stack marginTop="-14px" width="100%">
+                <Accordion
+                  topLine={false}
+                  bottomLine={false}
+                  surface={theme?.isDark ? 'dark' : 'light'}
+                >
+                <AccordionItem type="single" alwaysOpen={isLoading} opened>
+                  <AccordionHeader trigger={{ type: 'icon' }}>
+                    <Header surface={theme?.surface} isDark={theme?.isDark} isNetworkInsight={aiInsightStore?.isNetworkInsight} isLoading={isLoading} />
+                  </AccordionHeader>
+                  <AccordionDetail>
+                    {error && <ErrorMessage />}
+                    {!error && isLoading && <LoadingSkeleton isDark={theme?.isDark} />}
+                    {!error && !isLoading && (
+                      <Stack flexGrow={1} marginTop="-14px" gap="16px">
+                        <Summary list={networkInsight?.summary?.data} />
+                          <Recommendations
+                            recommendations={networkInsight?.recommendations}
+                          />
+                      </Stack>
+                    )}
+                  </AccordionDetail>
+                </AccordionItem>
+              </Accordion>
+            </Stack>
+          </HStack>
+            
+        </StyledNetworkInsightContainer>
+          <Continue handleSubSymptoms={handleSubSymptoms} isDark={theme?.isDark}/>
+      </Box>
+    </Fragment>
   );
 };
 
