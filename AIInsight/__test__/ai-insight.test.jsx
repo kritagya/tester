@@ -55,7 +55,7 @@ jest.mock('@vds/icons/ideas-solutions', () => {
   };
 });
 
-// Mock Feedback component
+// Mock Feedback component - create virtual mock since module doesn't exist
 jest.mock('../Feedback', () => {
   return function Feedback({ isACSS, acssCallId, vegasTransactionId, ...props }) {
     return (
@@ -68,7 +68,7 @@ jest.mock('../Feedback', () => {
       />
     );
   };
-});
+}, { virtual: true });
 
 // Mock AI Insight Hooks
 jest.mock('../ai-insight-hooks', () => ({
