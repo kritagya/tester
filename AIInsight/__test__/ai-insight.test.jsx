@@ -249,7 +249,7 @@ jest.mock('react', () => ({
   Fragment: ({ children }) => <div data-testid="react-fragment">{children}</div>
 }));
 
-// Mock VDS Typography
+// Mock VDS Typography - create virtual mock since module doesn't exist
 jest.mock('@vds/typography', () => ({
   Body: ({ children, size, color, bold, primitive = 'div', ...props }) => {
     const Component = primitive;
@@ -265,7 +265,7 @@ jest.mock('@vds/typography', () => ({
       </Component>
     );
   }
-}));
+}), { virtual: true });
 
 // Mock ResponsiveLayout components - create virtual mock since module doesn't exist
 jest.mock('../../ResponsiveLayout', () => ({
@@ -280,7 +280,7 @@ jest.mock('../../ResponsiveLayout', () => ({
   )
 }), { virtual: true });
 
-// Mock VDS Icons
+// Mock VDS Icons - create virtual mock since module doesn't exist
 jest.mock('@vds/icons/ideas-solutions', () => {
   return function IdeasSolutions({ iconsOnly, surface, ...props }) {
     return (
@@ -292,7 +292,7 @@ jest.mock('@vds/icons/ideas-solutions', () => {
       />
     );
   };
-});
+}, { virtual: true });
 
 // Mock Feedback component - create virtual mock since module doesn't exist
 jest.mock('../Feedback', () => {
@@ -309,12 +309,40 @@ jest.mock('../Feedback', () => {
   };
 }, { virtual: true });
 
+// Mock VDS Buttons - create virtual mock since module doesn't exist
+jest.mock('@vds/buttons', () => ({
+  Button: ({ children, size, surface, use, onClick, ...props }) => (
+    <button 
+      data-testid="vds-button" 
+      data-size={size}
+      data-surface={surface}
+      data-use={use}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+  TextLink: ({ children, href, style, surface, target, ...props }) => (
+    <a 
+      data-testid="vds-text-link" 
+      href={href}
+      data-surface={surface}
+      target={target}
+      style={style}
+      {...props}
+    >
+      {children}
+    </a>
+  )
+}), { virtual: true });
+
 // Mock AI Insight Hooks
 jest.mock('../ai-insight-hooks', () => ({
   useNetworkInsight: jest.fn()
 }));
 
-// Mock VDS Accordions
+// Mock VDS Accordions - create virtual mock since module doesn't exist
 jest.mock('@vds/accordions', () => ({
   Accordion: ({ children, topLine, bottomLine, type, surface, ...props }) => (
     <div 
@@ -354,7 +382,7 @@ jest.mock('@vds/accordions', () => ({
   AccordionDetail: ({ children, ...props }) => (
     <div data-testid="vds-accordion-detail" {...props}>{children}</div>
   )
-}));
+}), { virtual: true });
 
 // Mock AI Insight Styles
 jest.mock('../ai-insight-styles', () => ({
@@ -404,7 +432,7 @@ jest.mock('../ai-insight-store', () => ({
   useAIInsightStore: jest.fn()
 }));
 
-// Mock VDS Loaders
+// Mock VDS Loaders - create virtual mock since module doesn't exist
 jest.mock('@vds/loaders', () => ({
   Loader: ({ fullscreen, active, surface, ...props }) => (
     <div 
@@ -415,7 +443,7 @@ jest.mock('@vds/loaders', () => ({
       {...props} 
     />
   )
-}));
+}), { virtual: true });
 
 // Get mocked hooks
 const mockUseNetworkInsight = require('../ai-insight-hooks').useNetworkInsight;
