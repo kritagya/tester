@@ -1067,16 +1067,3 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
-
-TypeError: Cannot set property div of component => {
-        if (!component) {
-          throw new Error('styled() requires a component');
-        }
-        return c...<omitted>... } which has only a getter
-
-      105 |   // Copy all existing properties to the proxy
-      106 |   Object.keys(mockStyled).forEach(key => {
-    > 107 |     styledProxy[key] = mockStyled[key];
-          |                     ^
-      108 |   });
-
