@@ -28,7 +28,7 @@ jest.mock('@vds/typography', () => ({
   }
 }));
 
-// Mock ResponsiveLayout components
+// Mock ResponsiveLayout components - create virtual mock since module doesn't exist
 jest.mock('../../ResponsiveLayout', () => ({
   Box: ({ children, ...props }) => (
     <div data-testid="responsive-box" {...props}>{children}</div>
@@ -39,7 +39,7 @@ jest.mock('../../ResponsiveLayout', () => ({
   Stack: ({ children, ...props }) => (
     <div data-testid="responsive-stack" {...props}>{children}</div>
   )
-}));
+}), { virtual: true });
 
 // Mock VDS Icons
 jest.mock('@vds/icons/ideas-solutions', () => {
