@@ -127,10 +127,10 @@ jest.mock('../ai-insight-styles', () => ({
   )
 }));
 
-// Mock Param Details Hook
+// Mock Param Details Hook - create virtual mock since module doesn't exist
 jest.mock('../helpers/useParamDetails', () => ({
   useParamsDetails: jest.fn()
-}));
+}), { virtual: true });
 
 // Mock VDS Buttons
 jest.mock('@vds/buttons', () => ({
