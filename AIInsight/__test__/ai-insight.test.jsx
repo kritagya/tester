@@ -1,8 +1,40 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ThemeProvider } from 'styled-components';
+// ThemeProvider will be mocked by styled-components mock
 import NetworkInsight from '../ai-insight';
+
+// Mock styled-components to prevent "cannot create styled-component for undefined" error
+jest.mock('styled-components', () => {
+  const React = require('react');
+  
+  const mockStyled = (component) => {
+    return (strings, ...interpolations) => {
+      // Return a component that renders the base component
+      return React.forwardRef((props, ref) => {
+        const Component = typeof component === 'string' ? component : 'div';
+        return React.createElement(Component, {
+          ...props,
+          ref,
+          'data-testid': `styled-${typeof component === 'string' ? component : 'component'}`,
+          className: `styled-component ${props.className || ''}`.trim()
+        });
+      });
+    };
+  };
+
+  // Add common HTML elements as properties
+  mockStyled.div = mockStyled('div');
+  mockStyled.span = mockStyled('span');
+  mockStyled.button = mockStyled('button');
+  mockStyled.section = mockStyled('section');
+
+  return {
+    __esModule: true,
+    default: mockStyled,
+    ThemeProvider: ({ children, theme }) => React.createElement('div', { 'data-theme-provider': true }, children)
+  };
+});
 
 // Mock React with Fragment
 jest.mock('react', () => ({
@@ -309,11 +341,14 @@ const mockStyledComponentsTheme = {
   }
 };
 
-const TestWrapper = ({ children }) => (
-  <ThemeProvider theme={mockStyledComponentsTheme}>
-    {children}
-  </ThemeProvider>
-);
+const TestWrapper = ({ children }) => {
+  const { ThemeProvider } = require('styled-components');
+  return (
+    <ThemeProvider theme={mockStyledComponentsTheme}>
+      {children}
+    </ThemeProvider>
+  );
+};
 
 describe('AI Insight Component - Complete Test Suite', () => {
   beforeEach(() => {
@@ -933,3 +968,4 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
+
