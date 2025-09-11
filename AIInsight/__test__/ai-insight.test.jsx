@@ -8,31 +8,130 @@ import NetworkInsight from '../ai-insight';
 jest.mock('styled-components', () => {
   const React = require('react');
   
-  const mockStyled = (component) => {
+  const createStyledComponent = (component) => {
+    const componentName = typeof component === 'string' ? component : 'div';
+    
     return (strings, ...interpolations) => {
       // Return a component that renders the base component
-      return React.forwardRef((props, ref) => {
-        const Component = typeof component === 'string' ? component : 'div';
-        return React.createElement(Component, {
+      const StyledComponent = React.forwardRef((props, ref) => {
+        return React.createElement(componentName, {
           ...props,
           ref,
-          'data-testid': `styled-${typeof component === 'string' ? component : 'component'}`,
-          className: `styled-component ${props.className || ''}`.trim()
+          'data-testid': `styled-${componentName}`,
+          className: `styled-component styled-${componentName} ${props.className || ''}`.trim()
         });
       });
+      
+      StyledComponent.displayName = `Styled(${componentName})`;
+      return StyledComponent;
     };
   };
 
-  // Add common HTML elements as properties
-  mockStyled.div = mockStyled('div');
-  mockStyled.span = mockStyled('span');
-  mockStyled.button = mockStyled('button');
-  mockStyled.section = mockStyled('section');
+  // Create the main styled function
+  const mockStyled = (component) => {
+    if (!component) {
+      throw new Error('styled() requires a component');
+    }
+    return createStyledComponent(component);
+  };
+
+  // Add ALL HTML element properties to styled function
+  const htmlElements = [
+    // Basic elements
+    'div', 'span', 'p', 'a', 'img', 'br', 'hr',
+    // Text elements  
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'small', 'mark', 'del', 'ins', 'sub', 'sup',
+    // Lists
+    'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+    // Forms
+    'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'fieldset', 'legend',
+    // Tables
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
+    // Sections
+    'header', 'footer', 'main', 'section', 'article', 'aside', 'nav', 'details', 'summary',
+    // Media
+    'audio', 'video', 'source', 'track', 'canvas', 'svg', 'picture',
+    // Interactive
+    'dialog', 'menu', 'menuitem',
+    // Metadata
+    'head', 'title', 'meta', 'link', 'style', 'script', 'noscript', 'template',
+    // Embedded
+    'iframe', 'embed', 'object', 'param', 'area', 'map',
+    // Ruby
+    'ruby', 'rt', 'rp',
+    // Others
+    'figure', 'figcaption', 'time', 'progress', 'meter', 'output', 'pre', 'code', 'kbd', 'samp', 'var', 'cite', 'abbr', 'dfn', 'address', 'bdi', 'bdo', 'wbr', 'data', 'q', 's', 'u'
+  ];
+  
+  htmlElements.forEach(element => {
+    Object.defineProperty(mockStyled, element, {
+      get: () => {
+        const styledComponent = createStyledComponent(element);
+        // Add additional properties that might be accessed
+        styledComponent.withConfig = () => styledComponent;
+        styledComponent.attrs = () => styledComponent;
+        return styledComponent;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  });
+
+  // Add method chaining support
+  mockStyled.withConfig = (config) => mockStyled;
+  mockStyled.attrs = (attrs) => mockStyled;
+
+  // Add Proxy to catch any missing HTML elements
+  const styledProxy = new Proxy(mockStyled, {
+    get: (target, prop) => {
+      // If the property already exists, return it
+      if (prop in target) {
+        return target[prop];
+      }
+      
+      // If it's a string (potential HTML element), create a styled component for it
+      if (typeof prop === 'string' && /^[a-z][a-zA-Z0-9]*$/.test(prop)) {
+        const styledComponent = createStyledComponent(prop);
+        styledComponent.withConfig = () => styledComponent;
+        styledComponent.attrs = () => styledComponent;
+        return styledComponent;
+      }
+      
+      // Return undefined for other properties
+      return target[prop];
+    }
+  });
+
+  // Copy all existing properties to the proxy
+  Object.keys(mockStyled).forEach(key => {
+    styledProxy[key] = mockStyled[key];
+  });
+
+  // Add CSS helper functions
+  const css = (strings, ...interpolations) => strings.join('');
+  const keyframes = (strings, ...interpolations) => `keyframes-${Math.random().toString(36).substr(2, 9)}`;
+  const createGlobalStyle = () => () => null;
+  const ServerStyleSheet = function() {
+    this.collectStyles = (component) => component;
+    this.getStyleTags = () => '';
+    this.getStyleElement = () => [];
+  };
 
   return {
     __esModule: true,
-    default: mockStyled,
-    ThemeProvider: ({ children, theme }) => React.createElement('div', { 'data-theme-provider': true }, children)
+    default: styledProxy,
+    ThemeProvider: ({ children, theme }) => React.createElement('div', { 
+      'data-theme-provider': true,
+      'data-theme': JSON.stringify(theme)
+    }, children),
+    css,
+    keyframes,
+    createGlobalStyle,
+    ServerStyleSheet,
+    ThemeConsumer: ({ children }) => children({}),
+    withTheme: (Component) => Component,
+    useTheme: () => ({}),
+    isStyledComponent: () => false
   };
 });
 
@@ -968,4 +1067,3 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
-
