@@ -1157,3 +1157,14 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
+
+
+    styled() requires a component
+
+      128 |   const mockStyled = (component) => {
+      129 |     if (!component) {
+    > 130 |       throw new Error('styled() requires a component');
+          |             ^
+      131 |     }
+      132 |     return createStyledComponent(component);
+      133 |   };
