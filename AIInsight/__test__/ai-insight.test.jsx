@@ -384,13 +384,23 @@ jest.mock('@vds/accordions', () => ({
   )
 }), { virtual: true });
 
-// Mock AI Insight Styles
+// Mock AI Insight Styles - add all possible styled components
 jest.mock('../ai-insight-styles', () => ({
   StyledRecommendationAccordion: ({ children, ...props }) => (
     <div data-testid="styled-recommendation-accordion" {...props}>{children}</div>
   ),
   StyledNetworkInsightContainer: ({ children, ...props }) => (
     <div data-testid="styled-network-insight-container" {...props}>{children}</div>
+  ),
+  StyledTextLinkCaret: ({ children, ...props }) => (
+    <div data-testid="styled-text-link-caret" {...props}>{children}</div>
+  ),
+  // Add any other potential styled components
+  ContinueWrapper: ({ children, ...props }) => (
+    <div data-testid="continue-wrapper" {...props}>{children}</div>
+  ),
+  AiLoader: ({ children, ...props }) => (
+    <div data-testid="ai-loader" {...props}>{children}</div>
   )
 }));
 
