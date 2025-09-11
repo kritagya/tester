@@ -1069,3 +1069,11 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
+
+ TypeError: (0 , _styledComponents.default)(...).attrs is not a function
+
+      136 | `;
+      137 |
+    > 138 | export const Form = styled(Stack).attrs({ as : 'form'})``
+          |  
+
