@@ -11,7 +11,7 @@ jest.mock('styled-components', () => {
   const createStyledComponent = (component) => {
     const componentName = typeof component === 'string' ? component : 'div';
     
-    return (strings, ...interpolations) => {
+    const styledFactory = (strings, ...interpolations) => {
       // Return a component that renders the base component
       const StyledComponent = React.forwardRef((props, ref) => {
         return React.createElement(componentName, {
@@ -23,8 +23,53 @@ jest.mock('styled-components', () => {
       });
       
       StyledComponent.displayName = `Styled(${componentName})`;
+      
+      // Add chaining methods to the styled component
+      StyledComponent.attrs = (attributes) => {
+        return (strings, ...interpolations) => {
+          const AttrsComponent = React.forwardRef((props, ref) => {
+            const combinedProps = { ...attributes, ...props };
+            return React.createElement(componentName, {
+              ...combinedProps,
+              ref,
+              'data-testid': `styled-${componentName}`,
+              className: `styled-component styled-${componentName} ${combinedProps.className || ''}`.trim()
+            });
+          });
+          AttrsComponent.displayName = `Styled(${componentName}).attrs`;
+          AttrsComponent.attrs = StyledComponent.attrs; // Allow further chaining
+          AttrsComponent.withConfig = () => AttrsComponent;
+          return AttrsComponent;
+        };
+      };
+      
+      StyledComponent.withConfig = (config) => StyledComponent;
+      
       return StyledComponent;
     };
+    
+    // Add chaining methods to the factory itself
+    styledFactory.attrs = (attributes) => {
+      return (strings, ...interpolations) => {
+        const AttrsComponent = React.forwardRef((props, ref) => {
+          const combinedProps = { ...attributes, ...props };
+          return React.createElement(componentName, {
+            ...combinedProps,
+            ref,
+            'data-testid': `styled-${componentName}`,
+            className: `styled-component styled-${componentName} ${combinedProps.className || ''}`.trim()
+          });
+        });
+        AttrsComponent.displayName = `Styled(${componentName}).attrs`;
+        AttrsComponent.attrs = styledFactory.attrs; // Allow further chaining
+        AttrsComponent.withConfig = () => AttrsComponent;
+        return AttrsComponent;
+      };
+    };
+    
+    styledFactory.withConfig = (config) => styledFactory;
+    
+    return styledFactory;
   };
 
   // Create the main styled function
@@ -65,13 +110,7 @@ jest.mock('styled-components', () => {
   
   htmlElements.forEach(element => {
     Object.defineProperty(mockStyled, element, {
-      get: () => {
-        const styledComponent = createStyledComponent(element);
-        // Add additional properties that might be accessed
-        styledComponent.withConfig = () => styledComponent;
-        styledComponent.attrs = () => styledComponent;
-        return styledComponent;
-      },
+      get: () => createStyledComponent(element),
       configurable: true,
       enumerable: true
     });
@@ -91,10 +130,7 @@ jest.mock('styled-components', () => {
       
       // If it's a string (potential HTML element), create a styled component for it
       if (typeof prop === 'string' && /^[a-z][a-zA-Z0-9]*$/.test(prop)) {
-        const styledComponent = createStyledComponent(prop);
-        styledComponent.withConfig = () => styledComponent;
-        styledComponent.attrs = () => styledComponent;
-        return styledComponent;
+        return createStyledComponent(prop);
       }
       
       // Return undefined for other properties
@@ -1069,11 +1105,3 @@ describe('AI Insight Component - Complete Test Suite', () => {
     });
   });
 });
-
- TypeError: (0 , _styledComponents.default)(...).attrs is not a function
-
-      136 | `;
-      137 |
-    > 138 | export const Form = styled(Stack).attrs({ as : 'form'})``
-          |  
-
