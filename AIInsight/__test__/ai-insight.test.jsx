@@ -26,7 +26,7 @@ jest.mock('styled-components', () => {
       
       // Add chaining methods to the styled component
       StyledComponent.attrs = (attributes) => {
-        return (strings, ...interpolations) => {
+        const attrsFactory = (strings, ...interpolations) => {
           const AttrsComponent = React.forwardRef((props, ref) => {
             const combinedProps = { ...attributes, ...props };
             return React.createElement(componentName, {
@@ -37,20 +37,46 @@ jest.mock('styled-components', () => {
             });
           });
           AttrsComponent.displayName = `Styled(${componentName}).attrs`;
-          AttrsComponent.attrs = StyledComponent.attrs; // Allow further chaining
-          AttrsComponent.withConfig = () => AttrsComponent;
           return AttrsComponent;
         };
+        
+        // Add methods to the attrs factory
+        attrsFactory.attrs = (moreAttributes) => {
+          const combinedAttributes = { ...attributes, ...moreAttributes };
+          return StyledComponent.attrs(combinedAttributes);
+        };
+        attrsFactory.withConfig = (config) => attrsFactory;
+        
+        return attrsFactory;
       };
       
-      StyledComponent.withConfig = (config) => StyledComponent;
+      StyledComponent.withConfig = (config) => {
+        const withConfigFactory = (strings, ...interpolations) => {
+          const ConfigComponent = React.forwardRef((props, ref) => {
+            return React.createElement(componentName, {
+              ...props,
+              ref,
+              'data-testid': `styled-${componentName}`,
+              className: `styled-component styled-${componentName} ${props.className || ''}`.trim()
+            });
+          });
+          ConfigComponent.displayName = `Styled(${componentName}).withConfig`;
+          return ConfigComponent;
+        };
+        
+        // Add methods to the withConfig factory
+        withConfigFactory.attrs = StyledComponent.attrs;
+        withConfigFactory.withConfig = (moreConfig) => StyledComponent.withConfig({ ...config, ...moreConfig });
+        
+        return withConfigFactory;
+      };
       
       return StyledComponent;
     };
     
     // Add chaining methods to the factory itself
     styledFactory.attrs = (attributes) => {
-      return (strings, ...interpolations) => {
+      const attrsFactory = (strings, ...interpolations) => {
         const AttrsComponent = React.forwardRef((props, ref) => {
           const combinedProps = { ...attributes, ...props };
           return React.createElement(componentName, {
@@ -61,13 +87,39 @@ jest.mock('styled-components', () => {
           });
         });
         AttrsComponent.displayName = `Styled(${componentName}).attrs`;
-        AttrsComponent.attrs = styledFactory.attrs; // Allow further chaining
-        AttrsComponent.withConfig = () => AttrsComponent;
         return AttrsComponent;
       };
+      
+      // Add methods to the attrs factory
+      attrsFactory.attrs = (moreAttributes) => {
+        const combinedAttributes = { ...attributes, ...moreAttributes };
+        return styledFactory.attrs(combinedAttributes);
+      };
+      attrsFactory.withConfig = (config) => attrsFactory;
+      
+      return attrsFactory;
     };
     
-    styledFactory.withConfig = (config) => styledFactory;
+    styledFactory.withConfig = (config) => {
+      const withConfigFactory = (strings, ...interpolations) => {
+        const ConfigComponent = React.forwardRef((props, ref) => {
+          return React.createElement(componentName, {
+            ...props,
+            ref,
+            'data-testid': `styled-${componentName}`,
+            className: `styled-component styled-${componentName} ${props.className || ''}`.trim()
+          });
+        });
+        ConfigComponent.displayName = `Styled(${componentName}).withConfig`;
+        return ConfigComponent;
+      };
+      
+      // Add methods to the withConfig factory
+      withConfigFactory.attrs = styledFactory.attrs;
+      withConfigFactory.withConfig = (moreConfig) => styledFactory.withConfig({ ...config, ...moreConfig });
+      
+      return withConfigFactory;
+    };
     
     return styledFactory;
   };
