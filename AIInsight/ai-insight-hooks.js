@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { session } from '../../../helpers'
 import { useParamsDetails } from '../helpers/useParamDetails'
 import { useAIInsightStore } from './ai-insight-store'
+import { useEffect } from 'react'
 
 const networkInsightFlowName = 'network-insight'
 const deviceInsightFlowName = 'device-insight'
