@@ -1,6 +1,35 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+
+// Global setup - Define all styled components before any imports
+global.React = React;
+
+// Define all potential styled components globally before imports
+global.StyledTextLinkCaret = ({ children, ...props }) => 
+  React.createElement('div', { 'data-testid': 'styled-text-link-caret', ...props }, children);
+
+global.ContinueWrapper = ({ children, ...props }) => 
+  React.createElement('div', { 'data-testid': 'continue-wrapper', ...props }, children);
+
+global.AiLoader = ({ children, ...props }) => 
+  React.createElement('div', { 'data-testid': 'ai-loader', ...props }, children);
+
+global.StyledRecommendationAccordion = ({ children, ...props }) => 
+  React.createElement('div', { 'data-testid': 'styled-recommendation-accordion', ...props }, children);
+
+global.StyledNetworkInsightContainer = ({ children, ...props }) => 
+  React.createElement('div', { 'data-testid': 'styled-network-insight-container', ...props }, children);
+
+// Also add to window object for broader compatibility
+if (typeof window !== 'undefined') {
+  window.StyledTextLinkCaret = global.StyledTextLinkCaret;
+  window.ContinueWrapper = global.ContinueWrapper;
+  window.AiLoader = global.AiLoader;
+  window.StyledRecommendationAccordion = global.StyledRecommendationAccordion;
+  window.StyledNetworkInsightContainer = global.StyledNetworkInsightContainer;
+}
+
 // ThemeProvider will be mocked by styled-components mock
 import NetworkInsight from '../ai-insight';
 
@@ -435,19 +464,7 @@ const mockUseNetworkInsight = require('../ai-insight-hooks').useNetworkInsight;
 const mockUseParamsDetails = require('../helpers/useParamDetails').useParamsDetails;
 const mockUseAIInsightStore = require('../ai-insight-store').useAIInsightStore;
 
-// Global fallback for any missing styled components
-global.StyledTextLinkCaret = ({ children, ...props }) => (
-  React.createElement('div', { 'data-testid': 'styled-text-link-caret', ...props }, children)
-);
-
-// Add other potential missing styled components
-global.ContinueWrapper = ({ children, ...props }) => (
-  React.createElement('div', { 'data-testid': 'continue-wrapper', ...props }, children)
-);
-
-global.AiLoader = ({ children, ...props }) => (
-  React.createElement('div', { 'data-testid': 'ai-loader', ...props }, children)
-);
+// Note: Styled components are already defined globally above
 
 // Mock data
 const MOCK_DATA = {
