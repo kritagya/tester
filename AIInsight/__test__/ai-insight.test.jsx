@@ -334,6 +334,9 @@ jest.mock('@vds/buttons', () => ({
     >
       {children}
     </a>
+  ),
+  StyledTextLinkCaret: ({ children, ...props }) => (
+    <div data-testid="styled-text-link-caret" {...props}>{children}</div>
   )
 }), { virtual: true });
 
@@ -409,34 +412,6 @@ jest.mock('../helpers/useParamDetails', () => ({
   useParamsDetails: jest.fn()
 }), { virtual: true });
 
-// Mock VDS Buttons
-jest.mock('@vds/buttons', () => ({
-  Button: ({ children, size, surface, use, onClick, ...props }) => (
-    <button 
-      data-testid="vds-button" 
-      data-size={size}
-      data-surface={surface}
-      data-use={use}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-  TextLink: ({ children, href, style, surface, target, ...props }) => (
-    <a 
-      data-testid="vds-text-link" 
-      href={href}
-      data-surface={surface}
-      target={target}
-      style={style}
-      {...props}
-    >
-      {children}
-    </a>
-  )
-}));
-
 // Mock AI Insight Store
 jest.mock('../ai-insight-store', () => ({
   useAIInsightStore: jest.fn()
@@ -459,6 +434,20 @@ jest.mock('@vds/loaders', () => ({
 const mockUseNetworkInsight = require('../ai-insight-hooks').useNetworkInsight;
 const mockUseParamsDetails = require('../helpers/useParamDetails').useParamsDetails;
 const mockUseAIInsightStore = require('../ai-insight-store').useAIInsightStore;
+
+// Global fallback for any missing styled components
+global.StyledTextLinkCaret = ({ children, ...props }) => (
+  React.createElement('div', { 'data-testid': 'styled-text-link-caret', ...props }, children)
+);
+
+// Add other potential missing styled components
+global.ContinueWrapper = ({ children, ...props }) => (
+  React.createElement('div', { 'data-testid': 'continue-wrapper', ...props }, children)
+);
+
+global.AiLoader = ({ children, ...props }) => (
+  React.createElement('div', { 'data-testid': 'ai-loader', ...props }, children)
+);
 
 // Mock data
 const MOCK_DATA = {
