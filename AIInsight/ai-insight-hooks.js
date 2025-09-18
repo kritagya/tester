@@ -1,42 +1,10 @@
 import { renderHook, act } from '@testing-library/react'
 import { useAIInsight, useOrchestratorSubmit } from '../ai-insight-hooks'
-
-// Mock all dependencies
-jest.mock('../helpers/customSWR', () => ({
-  useCustomSWR: jest.fn()
-}))
-
-jest.mock('../helpers/axios', () => ({
-  post: jest.fn()
-}))
-
-jest.mock('../../../helpers', () => ({
-  session: jest.fn()
-}))
-
-jest.mock('../helpers/useParamDetails', () => ({
-  useParamsDetails: jest.fn()
-}))
-
-jest.mock('./ai-insight-store', () => ({
-  useAIInsightStore: jest.fn()
-}))
-
-jest.mock('../../customHooks/event-source', () => ({
-  useEventSource: jest.fn(),
-  useEventStore: jest.fn()
-}))
-
-// Mock window location
-delete window.location
-window.location = { href: 'https://test.example.com' }
-
-// Import mocked dependencies
-import { useCustomSWR } from '../helpers/customSWR'
-import customAxios from '../helpers/axios'
-import { session } from '../../../helpers'
-import { useParamsDetails } from '../helpers/useParamDetails'
-import { useAIInsightStore } from './ai-insight-store'
+import { useCustomSWR } from '../../helpers/customSWR'
+import customAxios from '../../helpers/axios'
+import { session } from '../../../../../../TroubleShooting/common/helpers'
+import { useParamsDetails } from '../../helpers/useParamDetails'
+import { useAIInsightStore } from '../ai-insight-store'
 import { useEventSource, useEventStore } from '../../customHooks/event-source'
 
 describe('useOrchestratorSubmit', () => {
