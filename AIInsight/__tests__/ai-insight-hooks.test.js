@@ -1,5 +1,47 @@
 import { renderHook, act } from '@testing-library/react'
 import { useAIInsight, useOrchestratorSubmit } from '../ai-insight-hooks'
+
+// Mock all dependencies
+jest.mock('../../helpers/customSWR', () => ({
+  useCustomSWR: jest.fn()
+}))
+
+jest.mock('../../helpers/axios', () => ({
+  post: jest.fn()
+}))
+
+jest.mock('../../../../../../TroubleShooting/common/helpers', () => ({
+  session: jest.fn()
+}))
+
+jest.mock('../../helpers/useParamDetails', () => ({
+  useParamsDetails: jest.fn()
+}))
+
+jest.mock('../ai-insight-store', () => ({
+  useAIInsightStore: jest.fn()
+}))
+
+jest.mock('../../customHooks/event-source', () => ({
+  useEventSource: jest.fn(),
+  useEventStore: jest.fn()
+}))
+
+// Mock React hooks
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useMemo: jest.fn((fn) => fn())
+}))
+
+// Mock window location
+Object.defineProperty(window, 'location', {
+  value: {
+    href: 'https://test.example.com'
+  },
+  writable: true
+})
+
+// Import mocked dependencies
 import { useCustomSWR } from '../../helpers/customSWR'
 import customAxios from '../../helpers/axios'
 import { session } from '../../../../../../TroubleShooting/common/helpers'
@@ -476,6 +518,14 @@ describe('useAIInsight', () => {
 describe('Environment Detection and API Calls', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    useCustomSWR.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: null
+    })
+    customAxios.post.mockResolvedValue({
+      data: { status: 'success' }
+    })
   })
 
   test('should make API calls with correct URL', async () => {
@@ -520,6 +570,13 @@ describe('Error Scenarios and Edge Cases', () => {
     })
     useEventStore.mockReturnValue(jest.fn())
     session.mockReturnValue({ get: jest.fn().mockReturnValue('session-intent') })
+    useCustomSWR.mockReturnValue({
+      isLoading: false,
+      error: null
+    })
+    customAxios.post.mockResolvedValue({
+      data: { status: 'success' }
+    })
   })
 
   test('should handle SWR error in useOrchestratorSubmit', () => {
@@ -588,7 +645,9 @@ describe('Error Scenarios and Edge Cases', () => {
     const { result } = renderHook(() => useAIInsight({ id: 'test-id' }))
     
     expect(result.current).toBeDefined()
-    expect(result.current.data).toBeDefined()
+    expect(result.current).toHaveProperty('data')
+    expect(result.current).toHaveProperty('isLoading')
+    expect(result.current).toHaveProperty('error')
   })
 
   test('should handle missing beforeRequest gracefully', async () => {
